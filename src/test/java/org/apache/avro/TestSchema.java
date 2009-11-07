@@ -47,6 +47,9 @@ public class TestSchema {
   public static final String BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
             +"\"symbols\": [\"A\", \"B\"]}";
 
+  public static final String UNION_IN_RECORD_SCHEMA = ("{'type':'record','name':'LongList','fields':[{'name':'value','type':'long'},"
+	  +"{'name':'next','type': ['LongList', 'null']} ] }").replace('\'', '"');
+
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
 
