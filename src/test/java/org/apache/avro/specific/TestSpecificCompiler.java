@@ -58,8 +58,17 @@ public class TestSpecificCompiler {
     Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(TestSchema.BASIC_ENUM_SCHEMA)).compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
-    assertEquals(o.path, "Test.java");
+    assertEquals("Test.java", o.path);
     assertTrue(o.contents.contains("public enum Test"));
+  }
+
+  @Test
+  public void testUnionsInRecord() {
+    Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(TestSchema.UNION_IN_RECORD_SCHEMA)).compile();
+    assertEquals(1, outputs.size());
+    OutputFile o = outputs.iterator().next();
+    assertEquals("LongList.java", o.path);
+    assertTrue(o.contents.contains("public class LongList"));
   }
 
   /**
