@@ -42,7 +42,9 @@ import org.apache.avro.util.Utf8;
  *  @see Decoder
  */
 public abstract class Encoder {
-
+  /** Are we writing binary? **/
+  public abstract boolean isBinary();
+  
   /** Redirect output (and reset the parser state if we're checking). */
   public abstract void init(OutputStream out) throws IOException;
 

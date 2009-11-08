@@ -29,6 +29,7 @@ import org.codehaus.jackson.JsonNode;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Encoding;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumReader;
@@ -126,6 +127,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     throw new AvroTypeException("Expected "+expected+", found "+actual);
   }
 
+  protected static Encoding determineEncoding(Schema schema, Decoder in) {
+    Encoding encoding = schema.getEncoding();
+    if (!in.isBinary() && encoding == Schema.Encoding.SPARSE) {  
+      // We only use sparse for binary encodings
+      encoding = Schema.Encoding.DEFAULT;
+    }
+    return encoding;
+  }
+  
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema actual, Schema expected,
@@ -139,20 +149,40 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     // all fields not in expected should be removed by newRecord.
     Object record = newRecord(old, expected);
     int size = 0;
-    for (Map.Entry<String, Field> entry : actual.getFields().entrySet()) {
+    Map<String, Field> actualFieldMap = actual.getFields();
+    byte[] sparseFieldMask = null;
+    switch (determineEncoding(actual, in)) {
+    case DEFAULT:
+      break;
+    case SPARSE:
+      sparseFieldMask = new byte[(actualFieldMap.size() + 7) / 8];
+      in.readFixed(sparseFieldMask);
+      break;
+    default:
+      throw new IllegalStateException();
+    }
+    for (Map.Entry<String, Field> entry : actualFieldMap.entrySet()) {
       String fieldName = entry.getKey();
       Field actualField = entry.getValue();
+      int actualIndex = actualField.pos();
       Field expectedField =
           expected == actual ? actualField : expectedFields.get(entry.getKey());
       if (expectedField == null) {
-        skip(actualField.schema(), in);
+        if (sparseFieldMask == null || (0 != (sparseFieldMask[actualIndex / 8] & (1 << (actualIndex % 8))))) {
+          skip(actualField.schema(), in);
+        }
         continue;
       }
       int fieldPosition = expectedField.pos();
       Object oldDatum =
           (old != null) ? getField(record, fieldName, fieldPosition) : null;
-      addField(record, fieldName, fieldPosition,
-               read(oldDatum,actualField.schema(),expectedField.schema(), in));
+      Object fieldValue = null;
+      if (sparseFieldMask == null || (0 != (sparseFieldMask[actualIndex / 8] & (1 << (actualIndex % 8))))) {
+        fieldValue = read(oldDatum,actualField.schema(),expectedField.schema(), in);
+      } else {
+        fieldValue = actualField.schema().getType().defaultValue();
+      }
+      addField(record, fieldName, fieldPosition,fieldValue);
       size++;
     }
     if (expectedFields.size() > size) {           // not all fields set
@@ -416,10 +446,27 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Skip an instance of a schema. */
   public static void skip(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
-    case RECORD:
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
-        skip(entry.getValue(), in);
-      break;
+    case RECORD: {
+      byte[] sparseFieldMask = null;
+      switch (determineEncoding(schema, in)) {
+      case DEFAULT:
+        break;
+      case SPARSE:
+        sparseFieldMask = new byte[(schema.getFields().size() + 7) / 8];
+        in.readFixed(sparseFieldMask);
+        break;
+      default:
+        throw new IllegalStateException();
+      }
+      int i = 0;
+      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
+        if (sparseFieldMask == null || (0 != (sparseFieldMask[i / 8] & (1 << (i % 8))))) {
+          skip(entry.getValue(), in);
+        }
+        i++;
+      }
+    }
+    break;
     case ENUM:
       in.readInt();
       break;

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -118,6 +119,58 @@ public class TestSchema {
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
     check(recordJson, "{\"f\":11}", record, false);
+  }
+
+  @Test
+  public void testSparseRecord1() throws Exception {
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"encoding\":\"sparse\", \"fields\":"
+      +"[{\"name\":\"f\", \"type\":\"long\"}]}";
+    Schema schema = Schema.parse(recordJson);
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("f", 11L);
+    check(recordJson, "{\"f\":11}", record, false);
+  }
+
+  @Test
+  public void testSparseRecord2() throws Exception {
+    Type[] checkTypes = new Type[] { Type.INT, Type.LONG, Type.DOUBLE, Type.FLOAT };
+    for (Type checkType : checkTypes) {
+      String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"encoding\":\"sparse\", \"fields\":" + "[";
+      for (int i = 0; i < 100; i++) {
+        if (i != 0)
+          recordJson += ",";
+        recordJson += "{\"name\":\"f" + i + "\", \"type\":\"" + checkType.name().toLowerCase() + "\"}";
+      }
+      recordJson += "]}";
+      Schema schema = Schema.parse(recordJson);
+      GenericData.Record record = new GenericData.Record(schema);
+      String expected = "{";
+      for (int i = 0; i < 100; i += 3) {
+        switch (checkType) {
+        case INT:
+          record.put("f" + i, i * 11);
+          break;
+        case LONG:
+          record.put("f" + i, i * 11L);
+          break;
+        case DOUBLE:
+          record.put("f" + i, i * 11.0);
+          break;
+        case FLOAT:
+          record.put("f" + i, i * 11f);
+          break;
+        default:
+          throw new IllegalStateException();
+        }
+
+        if (i != 0)
+          expected += ",";
+        expected += "\"f" + i + "\":" + (11 * i);
+      }
+      expected += "}";
+
+      check(recordJson, expected, record, false);
+    }
   }
 
   @Test

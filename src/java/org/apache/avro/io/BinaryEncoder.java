@@ -187,6 +187,11 @@ public class BinaryEncoder extends Encoder {
     encodeLong(unionIndex, out);
   }
   
+  @Override
+  public boolean isBinary() {
+    return true;
+  }
+
   protected static void encodeLong(long n, OutputStream o) throws IOException {
     n = (n << 1) ^ (n >> 63); // move sign to low-order bit
     while ((n & ~0x7F) != 0) {

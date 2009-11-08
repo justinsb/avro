@@ -39,6 +39,8 @@ import org.apache.avro.util.Utf8;
  */
 
 public abstract class Decoder {
+  /** Are we reading binary? **/
+  public abstract boolean isBinary();
   
   /** Start reading against a different input stream.  Stateful
     * subclasses will reset their states to their initial state. 

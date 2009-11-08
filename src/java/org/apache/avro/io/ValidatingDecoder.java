@@ -223,6 +223,9 @@ public class ValidatingDecoder extends ParsingDecoder
     return result;
   }
   
+  @Override
+  public boolean isBinary() { return in.isBinary(); }
+
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     return Symbol.CONTINUE;
   }

@@ -64,13 +64,21 @@ public abstract class Schema {
     FACTORY.enableParserFeature(JsonParser.Feature.ALLOW_COMMENTS);
     FACTORY.setCodec(MAPPER);
   }
-
+  
+  /** Encoding styles for records */
+  public enum Encoding {
+    DEFAULT, SPARSE;
+  };
+  
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
-      INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+      INT(0), LONG(0L), FLOAT(0f), DOUBLE(0.0), BOOLEAN(false), NULL;
     private String name;
-    private Type() { this.name = this.name().toLowerCase(); }
+    private Object defaultValue;
+    private Type() { this(null); }
+    private Type(Object defaultValue) { this.name = this.name().toLowerCase(); this.defaultValue = defaultValue; }
+    public Object defaultValue() { return defaultValue; }
   };
 
   private final Type type;
@@ -94,15 +102,15 @@ public abstract class Schema {
 
   /** Create an anonymous record schema. */
   public static Schema createRecord(LinkedHashMap<String,Field> fields) {
-    Schema result = createRecord(null, null, false);
+    Schema result = createRecord(null, null, false, null);
     result.setFields(fields);
     return result;
   }
 
   /** Create a named record schema. */
   public static Schema createRecord(String name, String namespace,
-                                    boolean isError) {
-     return new RecordSchema(name, namespace, isError);
+                                    boolean isError, RecordSchema.Encoding encoding) {
+     return new RecordSchema(name, namespace, isError, encoding);
   }
 
   /** Create an enum schema. */
@@ -136,6 +144,11 @@ public abstract class Schema {
 
   /** If this is a record, returns its fields. */
   public Map<String, Field> getFields() {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+
+  /** If this is a record, returns its encoding style. */
+  public Encoding getEncoding() {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
@@ -355,10 +368,13 @@ public abstract class Schema {
     private Map<String,Field> fields;
     private Iterable<Map.Entry<String,Schema>> fieldSchemas;
     private final boolean isError;
-    public RecordSchema(String name, String space, boolean isError) {
+    private final Encoding encoding;
+    public RecordSchema(String name, String space, boolean isError, Encoding encoding) {
       super(Type.RECORD, name, space);
       this.isError = isError;
+      this.encoding = encoding;
     }
+    public Encoding getEncoding() { return encoding != null ? encoding : Encoding.DEFAULT; }
     public boolean isError() { return isError; }
     public Map<String, Field> getFields() { return fields; }
     public Iterable<Map.Entry<String, Schema>> getFieldSchemas() {
@@ -410,6 +426,8 @@ public abstract class Schema {
       gen.writeStartObject();
       gen.writeStringField("type", isError?"error":"record");
       writeName(names, gen);
+      if (encoding != null)
+        gen.writeStringField("encoding", encoding.name().toLowerCase());
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       gen.writeEndObject();
@@ -703,9 +721,14 @@ public abstract class Schema {
           names.space(space);                     // set default namespace
       }
       if (type.equals("record") || type.equals("error")) { // record
+        JsonNode encodingNode = schema.get("encoding");
+        RecordSchema.Encoding encoding = null;
+        if (encodingNode != null)
+          encoding = RecordSchema.Encoding.valueOf(encodingNode.getTextValue().toUpperCase());
+        
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
         RecordSchema result =
-          new RecordSchema(name, space, type.equals("error"));
+          new RecordSchema(name, space, type.equals("error"), encoding);
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())

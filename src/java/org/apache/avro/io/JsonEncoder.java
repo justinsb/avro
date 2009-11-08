@@ -235,5 +235,10 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
     return Symbol.CONTINUE;
   }
+  
+  @Override
+  public boolean isBinary() {
+    return false;
+  }
 }
 

@@ -357,6 +357,9 @@ public class JsonDecoder extends ParsingDecoder
     return n;
   }
 
+  @Override
+  public boolean isBinary() { return false; }
+
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;

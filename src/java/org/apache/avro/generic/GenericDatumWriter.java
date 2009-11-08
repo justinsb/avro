@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,6 +27,8 @@ import java.util.Map.Entry;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.util.Utf8;
@@ -85,9 +88,65 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
-    for (Entry<String, Field> entry : schema.getFields().entrySet()) {
-      Field field = entry.getValue();
-      write(field.schema(), getField(datum, entry.getKey(), field.pos()), out);
+    Schema.Encoding encoding = schema.getEncoding();
+    if (!out.isBinary() && encoding == Schema.Encoding.SPARSE) {  
+      // If we're writing JSON, the sparse encoding doesn't make any sense...
+      encoding = Schema.Encoding.DEFAULT;
+    }
+    
+    switch (encoding) {
+    case DEFAULT:
+      for (Entry<String, Field> entry : schema.getFields().entrySet()) {
+        Field field = entry.getValue();
+        write(field.schema(), getField(datum, entry.getKey(), field.pos()), out);
+      }
+      break;
+
+    case SPARSE:
+      /* Use a header which is a bit mask of fields that are present */
+      Map<String, Field> fields = schema.getFields();
+      Object[] fieldValues = new Object[fields.size()];
+      byte[] fieldPresentMask = new byte[(fields.size() + 7) / 8];
+      int i = 0;
+      for (Entry<String, Field> entry : fields.entrySet()) {
+        Field field = entry.getValue();
+        Object fieldDatum = getField(datum, entry.getKey(), field.pos());
+        boolean isEmpty = true;
+        if (fieldDatum == null) {
+          isEmpty = true;
+        } else {
+          Type fieldType = field.schema().getType();
+          switch (fieldType) {
+          case INT: 
+          case LONG:
+          case FLOAT:
+          case DOUBLE:
+          case BOOLEAN:
+            isEmpty = fieldDatum.equals(fieldType.defaultValue());
+            break;
+          case NULL:   
+            isEmpty = true;
+            break;
+          }
+        }
+        if (!isEmpty) fieldPresentMask[i / 8] |= 1 << (i % 8);
+        fieldValues[i] = fieldDatum;
+        i++;
+      }
+      out.writeFixed(fieldPresentMask);
+      i = 0;
+      for (Entry<String, Field> entry : fields.entrySet()) {
+        if (0 == (fieldPresentMask[i / 8] & (1 << (i % 8)))) continue;
+
+        Field field = entry.getValue();
+        Object fieldDatum = fieldValues[i];
+        write(field.schema(), fieldDatum, out);
+        i++;
+      }
+      break;
+
+    default:
+      throw new IllegalArgumentException();
     }
   }
   

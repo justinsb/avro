@@ -284,7 +284,8 @@ public class ReflectData extends GenericData {
         LinkedHashMap<String,Schema.Field> fields =
           new LinkedHashMap<String,Schema.Field>();
         schema = Schema.createRecord(name, space,
-                                     Throwable.class.isAssignableFrom(c));
+                                     Throwable.class.isAssignableFrom(c),
+                                     null);
         if (!names.containsKey(fullName))
           names.put(fullName, schema);
         for (Field field : c.getDeclaredFields())

@@ -195,6 +195,11 @@ public class ValidatingEncoder extends ParsingEncoder
     return Symbol.CONTINUE;
   }
 
+  @Override
+  public boolean isBinary() {
+    return out.isBinary();
+  }
+
   /** Have we written at least one item into the current collection? */
   protected final boolean isTopEmpty() {
     return isEmpty.get(pos);

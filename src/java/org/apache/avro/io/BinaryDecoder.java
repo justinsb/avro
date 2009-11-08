@@ -297,5 +297,8 @@ public class BinaryDecoder extends Decoder {
   public int readIndex() throws IOException {
     return readInt();
   }
+  
+  @Override
+  public boolean isBinary() { return true; }
 }
 
