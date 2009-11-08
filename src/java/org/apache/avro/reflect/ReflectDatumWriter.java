@@ -28,16 +28,16 @@ import org.apache.avro.io.Encoder;
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
  * via Java reflection.
  */
-public class ReflectDatumWriter extends GenericDatumWriter<Object> {
+public class ReflectDatumWriter<D> extends GenericDatumWriter<D> {
   public ReflectDatumWriter() {
     this(ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c) {
+  public ReflectDatumWriter(Class<D> c) {
     this(c, ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c, ReflectData data) {
+  public ReflectDatumWriter(Class<D> c, ReflectData data) {
     this(data.getSchema(c), data);
   }
 

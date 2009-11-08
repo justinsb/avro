@@ -21,10 +21,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
-public class SpecificDatumWriter extends ReflectDatumWriter {
+public class SpecificDatumWriter<D> extends ReflectDatumWriter<D> {
   public SpecificDatumWriter() {}
 
-  public SpecificDatumWriter(Class c) {
+  public SpecificDatumWriter(Class<D> c) {
     super(SpecificData.get().getSchema(c), SpecificData.get());
   }
   

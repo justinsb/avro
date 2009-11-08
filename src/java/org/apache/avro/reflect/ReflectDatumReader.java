@@ -29,10 +29,10 @@ import org.apache.avro.generic.GenericDatumReader;
  * {@link org.apache.avro.io.DatumReader DatumReader} for existing classes via
  * Java reflection.
  */
-public class ReflectDatumReader extends GenericDatumReader<Object> {
+public class ReflectDatumReader<D> extends GenericDatumReader<D> {
   public ReflectDatumReader() {}
 
-  public ReflectDatumReader(Class c) {
+  public ReflectDatumReader(Class<D> c) {
     this(ReflectData.get().getSchema(c));
   }
 
