@@ -17,17 +17,14 @@
  */
 package org.apache.avro.specific;
 
-import java.io.IOException;
-
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.Encoder;
+import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
-public class SpecificDatumWriter extends GenericDatumWriter<Object> {
+public class SpecificDatumWriter<D> extends ReflectDatumWriter<D> {
   public SpecificDatumWriter() {}
 
-  public SpecificDatumWriter(Class c) {
+  public SpecificDatumWriter(Class<D> c) {
     super(SpecificData.get().getSchema(c), SpecificData.get());
   }
   
@@ -35,23 +32,8 @@ public class SpecificDatumWriter extends GenericDatumWriter<Object> {
     super(schema, SpecificData.get());
   }
   
-  protected SpecificDatumWriter(Schema root, SpecificData specificData) {
-    super(root, specificData);
-  }
-  
-  protected SpecificDatumWriter(SpecificData specificData) {
-    super(specificData);
-  }
-  
-  @Override
   protected Object getField(Object record, String name, int position) {
     return ((SpecificRecord)record).get(position);
-  }
-
-  @Override
-  protected void writeEnum(Schema schema, Object datum, Encoder out)
-    throws IOException {
-    out.writeEnum(((Enum)datum).ordinal());
   }
 
 }

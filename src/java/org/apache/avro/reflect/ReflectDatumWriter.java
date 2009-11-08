@@ -17,24 +17,27 @@
  */
 package org.apache.avro.reflect;
 
+import java.io.IOException;
+
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.Encoder;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
  * via Java reflection.
  */
-public class ReflectDatumWriter extends SpecificDatumWriter {
+public class ReflectDatumWriter<D> extends GenericDatumWriter<D> {
   public ReflectDatumWriter() {
     this(ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c) {
+  public ReflectDatumWriter(Class<D> c) {
     this(c, ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c, ReflectData data) {
+  public ReflectDatumWriter(Class<D> c, ReflectData data) {
     this(data.getSchema(c), data);
   }
 
@@ -42,15 +45,14 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
     this(root, ReflectData.get());
   }
 
-  protected ReflectDatumWriter(Schema root, ReflectData reflectData) {
+  public ReflectDatumWriter(Schema root, ReflectData reflectData) {
     super(root, reflectData);
   }
   
-  protected ReflectDatumWriter(ReflectData reflectData) {
+  public ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
   }
   
-  @Override
   protected Object getField(Object record, String name, int position) {
     try {
       return ReflectData.getField(record.getClass(), name).get(record);
@@ -59,5 +61,14 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
     }
   }
   
+  protected void writeEnum(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    out.writeEnum(((Enum)datum).ordinal());
+  }
+
+  protected boolean isEnum(Object datum) {
+    return datum instanceof Enum;
+  }
+
 }
 
