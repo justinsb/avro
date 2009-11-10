@@ -169,13 +169,17 @@ public class DataFileWriter<D> {
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       out.write(sync);
-      vout.writeLong(blockCount);
+      writeBlockHeader(vout, blockCount);
       buffer.writeTo(out);
       buffer.reset();
       blockCount = 0;
     }
   }
 
+  protected void writeBlockHeader(Encoder encoder, int blockCount) throws IOException {
+    vout.writeLong(blockCount);
+  }
+  
   /** Return the current position as a value that may be passed to {@link
    * DataFileReader#seek(long)}.  Forces the end of the current block,
    * emitting a synchronization marker. */
@@ -196,6 +200,11 @@ public class DataFileWriter<D> {
       out.close();
     }
 
+  /** Expose the current buffer position */
+  protected int getBufferSize() {
+    return buffer.size();
+  }
+  
   private void writeFooter() throws IOException {
     writeBlock();                               // flush any data
     setMeta(DataFileConstants.COUNT, count);    // update count

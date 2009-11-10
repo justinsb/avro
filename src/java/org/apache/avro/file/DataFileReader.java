@@ -31,6 +31,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.Encoder;
 
 /** Read files written by {@link DataFileWriter}.
  * @see DataFileWriter
@@ -45,7 +46,7 @@ public class DataFileReader<D> {
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
   private long count;                           // # entries in file
-  private long blockCount;                      // # entries in block
+  protected long blockCount;                    // # entries in block
   byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
   private byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
 
@@ -125,24 +126,45 @@ public class DataFileReader<D> {
 
   /** Return the next datum in the file. */
   public synchronized D next(D reuse) throws IOException {
-    while (blockCount == 0) {                     // at start of block
-
-      if (in.tell() == in.length())               // at eof
-        return null;
-
-      skipSync();                                 // skip a sync
-
-      blockCount = vin.readLong();                // read blockCount
-         
-      if (blockCount == DataFileConstants.FOOTER_BLOCK) { 
-        in.seek(vin.readLong()+in.tell());        // skip a footer
-        blockCount = 0;
-      }
+    if (blockCount == 0) {
+      advanceToNextBlock();
+      if (blockCount == 0)
+        return null; // at eof
     }
+    
     blockCount--;
     return reader.read(reuse, vin);
   }
+  
+  protected D readRecordAt(D reuse, long position) throws IOException {
+    in.seek(position);
+    return reader.read(reuse, vin);
+  }
 
+  protected void advanceToNextBlock() throws IOException {
+    while (blockCount == 0) { // at start of block
+      if (in.tell() == in.length()) // at eof
+        return;
+
+      skipSync(); // skip a sync
+
+      blockCount = readBlockHeader(vin); // read blockCount
+
+      if (blockCount == DataFileConstants.FOOTER_BLOCK) {
+        in.seek(vin.readLong() + in.tell()); // skip a footer
+        blockCount = 0;
+      }
+    }
+  }
+  
+  protected long readBlockHeader(Decoder decoder) throws IOException {
+    return decoder.readLong();
+  }
+  
+  protected long getPosition() throws IOException {
+    return in.tell();
+  }
+  
   private void skipSync() throws IOException {
     vin.readFixed(syncBuffer);
     if (!Arrays.equals(syncBuffer, sync))
