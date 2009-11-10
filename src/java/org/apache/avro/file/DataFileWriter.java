@@ -223,11 +223,13 @@ public class DataFileWriter<D> {
 
     private class PositionFilter extends FilterOutputStream {
       public PositionFilter(OutputStream out) throws IOException { super(out); }
+      @Override
       public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
         position += len;                           // update on write
       }
-      public void write(byte b) throws IOException {
+      @Override
+      public void write(int b) throws IOException {
         out.write(b);
         position += 1;                             // update on write
       }
