@@ -136,11 +136,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       out.writeFixed(fieldPresentMask);
       i = 0;
       for (Entry<String, Field> entry : fields.entrySet()) {
-        if (0 == (fieldPresentMask[i / 8] & (1 << (i % 8)))) continue;
-
-        Field field = entry.getValue();
-        Object fieldDatum = fieldValues[i];
-        write(field.schema(), fieldDatum, out);
+        if (0 != (fieldPresentMask[i / 8] & (1 << (i % 8)))) {
+          Field field = entry.getValue();
+          Object fieldDatum = fieldValues[i];
+          write(field.schema(), fieldDatum, out);
+        }
         i++;
       }
       break;
