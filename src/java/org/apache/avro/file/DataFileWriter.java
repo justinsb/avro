@@ -227,6 +227,10 @@ public class DataFileWriter<D> {
         out.write(b, off, len);
         position += len;                           // update on write
       }
+      public void write(byte[] b) throws IOException {
+        out.write(b);
+        position += 1;                             // update on write
+      }
     }
 
     public BufferedFileOutputStream(OutputStream out) throws IOException {
