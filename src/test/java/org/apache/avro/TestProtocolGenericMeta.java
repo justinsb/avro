@@ -29,7 +29,7 @@ public class TestProtocolGenericMeta extends TestProtocolGeneric {
   
   @Before
   public void testStartServer() throws Exception {
-    Responder responder = new TestResponder();
+    Responder<?> responder = new TestResponder();
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(responder, new InetSocketAddress(0));

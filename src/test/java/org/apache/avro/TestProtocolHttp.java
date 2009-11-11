@@ -31,10 +31,10 @@ public class TestProtocolHttp extends TestProtocolSpecific {
   @Before
   public void testStartServer() throws Exception {
     server =
-      new HttpServer(new SpecificResponder(Simple.class, new TestImpl()), 0);
+      new HttpServer(new SpecificResponder<Simple>(Simple.class, new TestImpl()), 0);
     client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+    proxy = SpecificRequestor.getSpecificClient(Simple.class, client);
   }
 
 }

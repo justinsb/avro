@@ -157,12 +157,12 @@ public class TestDataFile {
 
   @Test
     public void testGeneratedSpecific() throws IOException {
-      readFiles(new SpecificDatumReader());
+      readFiles(new SpecificDatumReader<Object>());
     }
 
   @Test
     public void testGeneratedReflect() throws IOException {
-      readFiles(new ReflectDatumReader());
+      readFiles(new ReflectDatumReader<Object>());
     }
 
     private void readFiles(DatumReader<Object> datumReader) throws IOException {

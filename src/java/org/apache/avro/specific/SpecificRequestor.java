@@ -19,6 +19,7 @@
 package org.apache.avro.specific;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 import org.apache.avro.Protocol;
@@ -48,34 +49,31 @@ public class SpecificRequestor extends ReflectRequestor {
   }
     
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter(schema);
+    return new SpecificDatumWriter<Object>(schema);
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema);
+    return new SpecificDatumReader<Object>(schema);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever)
+  public static <T> T getSpecificClient(Class<T> iface, Transceiver transciever)
     throws IOException {
-    return getClient(iface, transciever, SpecificData.get());
+    return getSpecificClient(iface, transciever, SpecificData.get());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever,
+  public static <T> T getSpecificClient(Class<T> iface, Transceiver transciever,
                                  SpecificData specificData)
     throws IOException {
     Protocol protocol = specificData.getProtocol(iface);
-    return Proxy.newProxyInstance(iface.getClassLoader(),
-                                  new Class[] { iface },
-                                  new SpecificRequestor(protocol, transciever));
+    return safeNewProxyInstance(iface.getClassLoader(), iface, new SpecificRequestor(protocol, transciever));
   }
   
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, SpecificRequestor requestor)
+  public static <T> T getSpecificClient(Class<T> iface, SpecificRequestor requestor)
     throws IOException {
-    return Proxy.newProxyInstance(iface.getClassLoader(),
-                                  new Class[] { iface }, requestor);
+    return safeNewProxyInstance(iface.getClassLoader(), iface, requestor);
   }
 }
 

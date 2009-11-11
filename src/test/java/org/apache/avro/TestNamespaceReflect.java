@@ -30,10 +30,10 @@ public class TestNamespaceReflect extends TestNamespaceSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()),
+    server = new SocketServer(new ReflectResponder<TestNamespace>(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (TestNamespace)ReflectRequestor.getClient(TestNamespace.class, client);
+    proxy = ReflectRequestor.getReflectClient(TestNamespace.class, client);
   }
 
 }

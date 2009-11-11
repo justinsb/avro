@@ -69,10 +69,10 @@ public class TestProtocolSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
+    server = new SocketServer(new SpecificResponder<Simple>(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+    proxy = SpecificRequestor.getSpecificClient(Simple.class, client);
   }
 
   @Test
@@ -148,7 +148,7 @@ public class TestProtocolSpecific {
             f.getName()+" - " + port);
         Transceiver client = new SocketTransceiver(
             new InetSocketAddress("localhost", port));
-        proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+        proxy = SpecificRequestor.getSpecificClient(Simple.class, client);
         TestProtocolSpecific proto = new TestProtocolSpecific();
         proto.testHello();
         proto.testEcho();
@@ -164,7 +164,7 @@ public class TestProtocolSpecific {
      */
     public static void main(String[] args) throws Exception {
       SocketServer server = new SocketServer(
-          new SpecificResponder(Simple.class, new TestImpl()),
+          new SpecificResponder<Simple>(Simple.class, new TestImpl()),
           new InetSocketAddress(0));
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
       FileWriter w = new FileWriter(portFile);

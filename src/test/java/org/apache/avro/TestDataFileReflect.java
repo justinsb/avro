@@ -53,7 +53,7 @@ public class TestDataFileReflect {
         reflectData.getSchema(BarRecord.class) });
     Schema union = Schema.createUnion(schemas);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
-        new ReflectDatumWriter(union));
+        new ReflectDatumWriter<Object>(union));
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -63,7 +63,7 @@ public class TestDataFileReflect {
     write(writer, new FooRecord(20), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;
@@ -88,7 +88,7 @@ public class TestDataFileReflect {
     schemas.add(reflectData.getSchema(FooRecord.class));
     Schema union = Schema.createUnion(schemas);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
-        new ReflectDatumWriter(union));
+        new ReflectDatumWriter<Object>(union));
 
     CheckList check = new CheckList();
     // write known type
@@ -110,7 +110,7 @@ public class TestDataFileReflect {
 
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;
@@ -132,7 +132,7 @@ public class TestDataFileReflect {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schema = reflectData.getSchema(BarRecord.class);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
-        new ReflectDatumWriter(schema, reflectData));
+        new ReflectDatumWriter<Object>(schema, reflectData));
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -142,7 +142,7 @@ public class TestDataFileReflect {
     write(writer, new BarRecord("Two beers please"), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;
@@ -163,7 +163,7 @@ public class TestDataFileReflect {
 
     Schema schema = ReflectData.get().getSchema(BazRecord.class);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
-        new ReflectDatumWriter(schema));
+        new ReflectDatumWriter<Object>(schema));
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -171,7 +171,7 @@ public class TestDataFileReflect {
     write(writer, new BazRecord(20), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;

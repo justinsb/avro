@@ -163,10 +163,10 @@ public class TestCompare {
     s2.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6});
     Schema schema = SpecificData.get().getSchema(TestRecord.class);
 
-    check(schema, s1, s2, true, new SpecificDatumWriter(schema),
+    check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
     s2.kind = Kind.BAZ;
-    check(schema, s1, s2, true, new SpecificDatumWriter(schema),
+    check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
   }  
 
@@ -182,9 +182,9 @@ public class TestCompare {
           new GenericDatumWriter<Object>(), GenericData.get());
   }
 
-  private static void check(Schema schema, Object o1, Object o2,
+  private static <D> void check(Schema schema, D o1, D o2,
                             boolean comparable,
-                            DatumWriter<Object> writer,
+                            DatumWriter<D> writer,
                             GenericData comparator)
     throws Exception {
 
@@ -209,8 +209,8 @@ public class TestCompare {
       : comparator.compare(o1, o2, schema);
   }
 
-  private static byte[] render(Object datum, Schema schema,
-                               DatumWriter<Object> writer)
+  private static <D> byte[] render(D datum, Schema schema,
+                               DatumWriter<D> writer)
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);

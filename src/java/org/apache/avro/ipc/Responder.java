@@ -45,7 +45,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 /** Base class for the server side of a protocol interaction. */
-public abstract class Responder {
+public abstract class Responder<D> {
   private static final Logger LOG = LoggerFactory.getLogger(Responder.class);
 
   private static final Schema META =
@@ -102,7 +102,7 @@ public abstract class Responder {
       if (m == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
       
-      Object request = readRequest(m.getRequest(), in);
+      D request = readRequest(m.getRequest(), in);
       
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverReceiveRequest(context);
@@ -112,7 +112,7 @@ public abstract class Responder {
       m = getLocal().getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("No such local message: "+messageName);
-      Object response = null;
+      D response = null;
       try {
         response = respond(m, request);
         context.setResponse(response);
@@ -150,10 +150,10 @@ public abstract class Responder {
     return bbo.getBufferList();
   }
 
-  private SpecificDatumWriter handshakeWriter =
-    new SpecificDatumWriter(HandshakeResponse.class);
-  private SpecificDatumReader handshakeReader =
-    new SpecificDatumReader(HandshakeRequest.class);
+  private SpecificDatumWriter<HandshakeResponse> handshakeWriter =
+    new SpecificDatumWriter<HandshakeResponse>(HandshakeResponse.class);
+  private SpecificDatumReader<HandshakeRequest> handshakeReader =
+    new SpecificDatumReader<HandshakeRequest>(HandshakeRequest.class);
 
   @SuppressWarnings("unchecked")
   private Protocol handshake(Decoder in, Encoder out)
@@ -190,15 +190,15 @@ public abstract class Responder {
   }
 
   /** Computes the response for a message. */
-  public abstract Object respond(Message message, Object request)
+  public abstract D respond(Message message, D request)
     throws AvroRemoteException;
 
   /** Reads a request message. */
-  public abstract Object readRequest(Schema schema, Decoder in)
+  public abstract D readRequest(Schema schema, Decoder in)
     throws IOException;
 
   /** Writes a response message. */
-  public abstract void writeResponse(Schema schema, Object response,
+  public abstract void writeResponse(Schema schema, D response,
                                      Encoder out) throws IOException;
 
   /** Writes an error message. */

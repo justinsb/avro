@@ -24,17 +24,17 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.reflect.ReflectResponder;
 
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
-public class SpecificResponder extends ReflectResponder {
-  public SpecificResponder(Class iface, Object impl) {
+public class SpecificResponder<D> extends ReflectResponder<D> {
+  public SpecificResponder(Class<D> iface, Object impl) {
     super(iface, impl);
   }
     
-  protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter(schema);
+  protected DatumWriter<D> getDatumWriter(Schema schema) {
+    return new SpecificDatumWriter<D>(schema);
   }
 
-  protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema);
+  protected DatumReader<D> getDatumReader(Schema schema) {
+    return new SpecificDatumReader<D>(schema);
   }
 
 }
