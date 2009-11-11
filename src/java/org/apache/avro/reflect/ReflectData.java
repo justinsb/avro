@@ -45,6 +45,8 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.util.Utf8;
 
+import com.google.common.collect.Lists;
+
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends GenericData {
   
@@ -312,16 +314,25 @@ public class ReflectData extends GenericData {
   public Protocol getProtocol(Class iface) {
     Protocol protocol =
       new Protocol(iface.getSimpleName(), iface.getPackage().getName()); 
-    Map<String,Schema> names = new LinkedHashMap<String,Schema>();
-    for (Method method : iface.getDeclaredMethods())
-      if ((method.getModifiers() & Modifier.STATIC) == 0)
-        protocol.getMessages().put(method.getName(),
-                                   getMessage(method, protocol, names));
+    LinkedHashMap<String,Schema> names = new LinkedHashMap<String,Schema>();
+    Map<String,Schema> orderedNames = new LinkedHashMap<String,Schema>();
+    for (Method method : iface.getDeclaredMethods()) {
+      if ((method.getModifiers() & Modifier.STATIC) == 0) {
+        protocol.getMessages().put(method.getName(), getMessage(method, protocol, names));
 
-    // reverse types, since they were defined in reference order
+        // We've just added names from orderedNames.size() to names.size(), but we need to reverse, since they were defined in reference order
+        int justAddedCount = names.size() - orderedNames.size();
+        List<String> keyList = Lists.newArrayList(names.keySet());
+        for (int i = 0; i < justAddedCount; i++) {
+          String key = keyList.get(keyList.size() - i - 1);
+          orderedNames.put(key, names.get(key));
+        }
+      }
+    }
+    
     List<Schema> types = new ArrayList<Schema>();
-    types.addAll(names.values());
-    Collections.reverse(types);
+    types.addAll(orderedNames.values());
+
     protocol.setTypes(types);
 
     return protocol;
