@@ -128,8 +128,11 @@ public class BinaryEncoder extends Encoder {
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
-    encodeLong(utf8.getLength(), out);
-    out.write(utf8.getBytes(), 0, utf8.getLength());
+    int length = utf8 != null ? utf8.getLength() : 0;
+    encodeLong(length, out);
+    if (length != 0) {
+      out.write(utf8.getBytes(), 0, length);
+    }
   }
 
   @Override
