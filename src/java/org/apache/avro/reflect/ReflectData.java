@@ -17,6 +17,7 @@
  */
 package org.apache.avro.reflect;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Named;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
@@ -42,9 +44,6 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.util.Utf8;
-
-import com.thoughtworks.paranamer.CachingParanamer;
-import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends GenericData {
@@ -328,17 +327,25 @@ public class ReflectData extends GenericData {
     return protocol;
   }
 
-  private final Paranamer paranamer = new CachingParanamer();
-
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {
     LinkedHashMap<String,Schema.Field> fields =
       new LinkedHashMap<String,Schema.Field>();
-    String[] paramNames = paranamer.lookupParameterNames(method);
+    Annotation[][] allParametersAnnotations = method.getParameterAnnotations();
     java.lang.reflect.Type[] paramTypes = method.getGenericParameterTypes();
-    for (int i = 0; i < paramTypes.length; i++)
-      fields.put(paramNames[i],
-                 new Schema.Field(createSchema(paramTypes[i], names), null));
+    for (int i = 0; i < paramTypes.length; i++) {
+      Annotation[] parameterAnnotations = allParametersAnnotations[i];
+      String paramName = null;
+      for (int j = 0; j < parameterAnnotations.length; j++) {
+        if (parameterAnnotations[j] instanceof Named) {
+          paramName = ((Named) parameterAnnotations[j]).value();
+        }
+      }
+      if (paramName == null)
+        throw new IllegalArgumentException("@Named annotation not found for parameter #" + (i + 1) + " on method " + method);
+      fields.put(paramName, new Schema.Field(createSchema(paramTypes[i], names), null));
+    }
+  
     Schema request = Schema.createRecord(fields);
 
     Schema response = createSchema(method.getGenericReturnType(), names);
