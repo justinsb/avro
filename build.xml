@@ -253,11 +253,6 @@
       <taskdef name="schema" classname="org.apache.avro.specific.SchemaTask">
 	<classpath refid="java.classpath" />
       </taskdef>
-      <taskdef
-	 name="paranamer" 
-	 classname="com.thoughtworks.paranamer.ant.ParanamerGeneratorTask">
-	<classpath refid="java.classpath" />
-      </taskdef>
 
       <mkdir dir="@{generated}"/>
       
@@ -275,7 +270,6 @@
 
       <java-compiler src="@{generated}" dest="@{dest}"
 		     classpath="@{classpath}"/>
-      <paranamer sourceDirectory="@{generated}" outputDirectory="@{dest}"/>
     </sequential>
   </macrodef>
 
