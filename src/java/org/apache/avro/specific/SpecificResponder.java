@@ -26,7 +26,7 @@ import org.apache.avro.reflect.ReflectResponder;
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
 public class SpecificResponder<D> extends ReflectResponder<D> {
   public SpecificResponder(Class<D> iface, Object impl) {
-    super(iface, impl);
+    super(iface, impl, SpecificData.get());
   }
     
   protected DatumWriter<D> getDatumWriter(Schema schema) {
@@ -36,6 +36,5 @@ public class SpecificResponder<D> extends ReflectResponder<D> {
   protected DatumReader<D> getDatumReader(Schema schema) {
     return new SpecificDatumReader<D>(schema);
   }
-
 }
 
