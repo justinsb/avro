@@ -17,6 +17,7 @@
  */
 package org.apache.avro.reflect;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Named;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -36,9 +38,6 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.ipc.AvroRemoteException;
-
-import com.thoughtworks.paranamer.CachingParanamer;
-import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -177,13 +176,30 @@ public class ReflectData extends SpecificData {
     return protocol;
   }
 
-  private final Paranamer paranamer = new CachingParanamer();
+  private String[] getParameterNames(Method method) {
+    Annotation[][] allParametersAnnotations = method.getParameterAnnotations();
+    int paramCount = allParametersAnnotations.length;
+    String[] parameterNames = new String[paramCount];
+    for (int i = 0; i < paramCount; i++) {
+      Annotation[] parameterAnnotations = allParametersAnnotations[i];
+      String paramName = null;
+      for (int j = 0; j < parameterAnnotations.length; j++) {
+        if (parameterAnnotations[j] instanceof Named) {
+          paramName = ((Named) parameterAnnotations[j]).value();
+        }
+      }
+      if (paramName == null)
+        throw new IllegalArgumentException("@Named annotation not found for parameter #" + (i + 1) + " on method " + method);
+      parameterNames[i] = paramName;
+    }
+    return parameterNames;
+  }
 
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {
     LinkedHashMap<String,Schema.Field> fields =
       new LinkedHashMap<String,Schema.Field>();
-    String[] paramNames = paranamer.lookupParameterNames(method);
+    String[] paramNames = getParameterNames(method);
     java.lang.reflect.Type[] paramTypes = method.getGenericParameterTypes();
     for (int i = 0; i < paramTypes.length; i++)
       fields.put(paramNames[i],

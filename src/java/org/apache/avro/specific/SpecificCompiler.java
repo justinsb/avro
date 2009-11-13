@@ -182,6 +182,7 @@ public class SpecificCompiler {
     }
     line(out, 0, "import java.nio.ByteBuffer;");
     line(out, 0, "import java.util.Map;");
+    line(out, 0, "import org.apache.avro.Named;");
     line(out, 0, "import org.apache.avro.Protocol;");
     line(out, 0, "import org.apache.avro.Schema;");
     line(out, 0, "import org.apache.avro.AvroRuntimeException;");
@@ -208,6 +209,7 @@ public class SpecificCompiler {
     int count = 0;
     for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
       String paramName = param.getKey();
+      b.append("@Named(\"" + paramName + "\") ");
       b.append(unbox(param.getValue()));
       b.append(" ");
       b.append(paramName);
