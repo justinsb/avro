@@ -54,10 +54,10 @@ public class TestNamespaceSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    server = new SocketServer(new SpecificResponder(TestNamespace.class, new TestImpl()),
+    server = new SocketServer(new SpecificResponder<TestNamespace>(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (TestNamespace)SpecificRequestor.getClient(TestNamespace.class, client);
+    proxy = SpecificRequestor.getSpecificClient(TestNamespace.class, client);
   }
 
   @Test

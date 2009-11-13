@@ -65,11 +65,11 @@ public class TestBulkData {
   @Before
   public void startServer() throws Exception {
     server =
-      new HttpServer(new SpecificResponder(BulkData.class, new BulkDataImpl()),
+      new HttpServer(new SpecificResponder<BulkData>(BulkData.class, new BulkDataImpl()),
                      0);
     client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
-    proxy = (BulkData)SpecificRequestor.getClient(BulkData.class, client);
+    proxy = SpecificRequestor.getSpecificClient(BulkData.class, client);
   }
 
   @Test

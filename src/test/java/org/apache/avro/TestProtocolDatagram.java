@@ -32,11 +32,11 @@ public class TestProtocolDatagram extends TestProtocolSpecific {
   @Before
   public void testStartServer() throws Exception {
     server =
-      new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
+      new DatagramServer(new SpecificResponder<Simple>(Simple.class, new TestImpl()),
                          new InetSocketAddress("localhost",
                                                new Random().nextInt(10000)+10000));
     client = new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+    proxy = SpecificRequestor.getSpecificClient(Simple.class, client);
   }
 
 }

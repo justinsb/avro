@@ -155,7 +155,7 @@ public class TestProtocolGeneric {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", ((Map)error.getValue()).get("message").toString());
+    assertEquals("an error", ((Map<?,?>)error.getValue()).get("message").toString());
   }
 
   @Test

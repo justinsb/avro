@@ -30,10 +30,10 @@ public class TestProtocolReflect extends TestProtocolSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
+    server = new SocketServer(new ReflectResponder<Simple>(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Simple)ReflectRequestor.getClient(Simple.class, client);
+    proxy = ReflectRequestor.getReflectClient(Simple.class, client);
   }
 
 }

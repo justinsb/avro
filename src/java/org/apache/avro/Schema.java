@@ -36,6 +36,8 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -57,6 +59,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  * </ul>
  */
 public abstract class Schema {
+  private static final Logger LOG = LoggerFactory.getLogger(Schema.class);
+
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -702,6 +706,11 @@ public abstract class Schema {
           space = names.space();
         if (names.space() == null && space != null)
           names.space(space);                     // set default namespace
+      }
+      Name nameKey = new Name(name, space);
+      if (name != null && names.containsKey(nameKey)) {
+        LOG.warn("Duplicate schema name found, returning existing: " + nameKey);
+        return names.get(nameKey);
       }
       if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();

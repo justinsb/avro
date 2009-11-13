@@ -28,6 +28,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.util.Utf8;
 
 /** {@link DatumWriter} for generic Java objects. */
@@ -55,6 +56,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     write(root, datum, out);
   }
   
+  public void writeError(AvroRemoteException error, Encoder out) throws IOException {
+    write(root, error, out);
+  }
+ 
   /** Called to write data.*/
   protected void write(Schema schema, Object datum, Encoder out)
     throws IOException {

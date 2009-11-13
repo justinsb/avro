@@ -43,34 +43,36 @@ public class ReflectRequestor extends SpecificRequestor {
     
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter(schema);
+    return new ReflectDatumWriter<Object>(schema);
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new ReflectDatumReader(schema);
+    return new ReflectDatumReader<Object>(schema);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever)
+  public static <T> T getReflectClient(Class<T> iface, Transceiver transciever)
     throws IOException {
-    return getClient(iface, transciever, ReflectData.get());
+    return getReflectClient(iface, transciever, ReflectData.get());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever, ReflectData reflectData)
+  public static <T> T getReflectClient(Class<T> iface, Transceiver transciever, ReflectData reflectData)
     throws IOException {
     Protocol protocol = reflectData.getProtocol(iface);
-    return Proxy.newProxyInstance(iface.getClassLoader(),
-                                  new Class[] { iface },
-                                  new ReflectRequestor(protocol, transciever));
+    return safeNewProxyInstance(iface.getClassLoader(),iface,new ReflectRequestor(protocol, transciever));
   }
   
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, ReflectRequestor rreq)
+  public static <T> T getReflectClient(Class<T> iface, ReflectRequestor rreq)
     throws IOException {
-    return Proxy.newProxyInstance(iface.getClassLoader(),
-                                  new Class[] { iface }, rreq);
+    return safeNewProxyInstance(iface.getClassLoader(),iface,rreq);
+  }
+  
+  @SuppressWarnings("unchecked")
+  protected static <T> T safeNewProxyInstance(ClassLoader loader, Class<T> interfaceClass, InvocationHandler handler) {
+    return (T) Proxy.newProxyInstance(loader, new Class[] { interfaceClass }, handler);
   }
 }
 

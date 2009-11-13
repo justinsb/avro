@@ -30,7 +30,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
 
   @Before
   public void testStartServer() throws Exception {
-    ReflectResponder rresp = new ReflectResponder(Simple.class, new TestImpl());
+    ReflectResponder<Simple> rresp = new ReflectResponder<Simple>(Simple.class, new TestImpl());
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(rresp, new InetSocketAddress(0));
@@ -39,7 +39,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = (Simple)ReflectRequestor.getClient(Simple.class, (ReflectRequestor)requestor);
+    proxy = ReflectRequestor.getReflectClient(Simple.class, (ReflectRequestor)requestor);
   }
 
 }

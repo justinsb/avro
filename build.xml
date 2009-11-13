@@ -288,8 +288,9 @@
     <attribute name="files.location" />
     <attribute name="tests.pattern" />
     <sequential>
-      <junit showoutput="yes"
+      <junit showoutput="yes" 
              printsummary="withOutAndErr"
+             includeantruntime="no" fork="no"
              haltonfailure="no"
              errorProperty="tests.failed" failureProperty="tests.failed">
         <sysproperty key="test.count" value="${test.count}"/>

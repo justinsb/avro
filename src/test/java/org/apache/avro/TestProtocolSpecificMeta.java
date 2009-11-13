@@ -32,7 +32,7 @@ public class TestProtocolSpecificMeta extends TestProtocolSpecific {
   
   @Before
   public void testStartServer() throws Exception {
-    Responder responder = new SpecificResponder(Simple.class, new TestImpl());
+    Responder<Simple> responder = new SpecificResponder<Simple>(Simple.class, new TestImpl());
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(responder, new InetSocketAddress(0));
@@ -41,6 +41,6 @@ public class TestProtocolSpecificMeta extends TestProtocolSpecific {
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     req.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     req.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    proxy = SpecificRequestor.getSpecificClient(Simple.class, (SpecificRequestor)req);
   }
 }
