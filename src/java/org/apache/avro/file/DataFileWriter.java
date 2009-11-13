@@ -166,14 +166,26 @@ public class DataFileWriter<D> {
         writeBlock();
     }
 
+  protected int getBufferOffset() {
+    return buffer.size();
+  }
+  
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       out.write(sync);
       vout.writeLong(blockCount);
+      writeBlockMetadata(vout, blockCount);
       buffer.writeTo(out);
       buffer.reset();
       blockCount = 0;
     }
+  }
+  
+  /**
+   * A hook that allows derived classes to add extra data at the head of each block
+   */
+  protected void writeBlockMetadata(Encoder encoder, int blockCount) throws IOException {
+    
   }
 
   /** Return the current position as a value that may be passed to {@link

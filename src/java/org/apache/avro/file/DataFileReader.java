@@ -37,10 +37,10 @@ import org.apache.avro.io.BinaryDecoder;
  */
 public class DataFileReader<D> {
 
-  private Schema schema;
-  private DatumReader<D> reader;
-  private SeekableBufferedInput in;
-  private Decoder vin;
+  protected Schema schema;
+  protected DatumReader<D> reader;
+  protected SeekableBufferedInput in;
+  protected Decoder vin;
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
@@ -123,12 +123,10 @@ public class DataFileReader<D> {
     return Long.parseLong(getMetaString(key));
   }
 
-  /** Return the next datum in the file. */
-  public synchronized D next(D reuse) throws IOException {
+  protected void advanceToNextBlock() throws IOException {
     while (blockCount == 0) {                     // at start of block
-
       if (in.tell() == in.length())               // at eof
-        return null;
+        return;
 
       skipSync();                                 // skip a sync
 
@@ -137,12 +135,29 @@ public class DataFileReader<D> {
       if (blockCount == DataFileConstants.FOOTER_BLOCK) { 
         in.seek(vin.readLong()+in.tell());        // skip a footer
         blockCount = 0;
+      } else {
+        readBlockMetadata(vin, blockCount);
       }
+    }
+  }
+  /** Return the next datum in the file. */
+  public synchronized D next(D reuse) throws IOException {
+    if (blockCount == 0) {
+      advanceToNextBlock();
+      
+      if (blockCount == 0)
+        return null; // at eof
     }
     blockCount--;
     return reader.read(reuse, vin);
   }
 
+  /**
+   * Allows a derived class to read per-block metadata
+   */
+  protected void readBlockMetadata(Decoder decoder, long blockCount) throws IOException {
+  }
+  
   private void skipSync() throws IOException {
     vin.readFixed(syncBuffer);
     if (!Arrays.equals(syncBuffer, sync))
@@ -155,7 +170,7 @@ public class DataFileReader<D> {
     in.seek(position);
     blockCount = 0;
   }
-
+  
   /** Move to the next synchronization point after a position. */
   public synchronized void sync(long position) throws IOException {
     if (in.tell()+DataFileConstants.SYNC_SIZE >= in.length()) {
@@ -183,7 +198,7 @@ public class DataFileReader<D> {
     in.close();
   }
 
-  private class SeekableBufferedInput extends BufferedInputStream {
+  protected class SeekableBufferedInput extends BufferedInputStream {
     private long position;                        // end of buffer
     private long length;                          // file length
 
