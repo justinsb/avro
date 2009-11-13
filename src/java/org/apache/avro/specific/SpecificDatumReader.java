@@ -25,7 +25,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
-public class SpecificDatumReader extends GenericDatumReader<Object> {
+public class SpecificDatumReader<D> extends GenericDatumReader<D> {
   public SpecificDatumReader() {}
 
   public SpecificDatumReader(Class c) {
