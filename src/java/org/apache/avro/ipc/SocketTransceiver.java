@@ -54,7 +54,11 @@ public class SocketTransceiver extends Transceiver {
     while (true) {
       header.clear();
       while (header.hasRemaining()) {
-        channel.read(header);
+        int bytesRead = channel.read(header);
+        if (bytesRead == -1) {
+          // EOF
+          break;
+        }
       }
       header.flip();
       int length = header.getInt();
